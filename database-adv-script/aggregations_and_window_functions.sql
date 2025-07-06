@@ -13,24 +13,17 @@ GROUP BY
 ORDER BY
     total_bookings DESC;
 
--- Query 2: Rank properties based on the total number of bookings they have received using ROW_NUMBER().
-WITH PropertyBookingCounts AS (
-    SELECT
-        property_id,
-        COUNT(booking_id) AS booking_count
-    FROM
-        Bookings
-    GROUP BY
-        property_id
-)
+-- Query 2: Rank properties based on booking count using ROW_NUMBER() without a CTE.
 SELECT
     p.property_id,
     p.title,
-    pbc.booking_count,
-    ROW_NUMBER() OVER (ORDER BY pbc.booking_count DESC) AS property_rank
+    booking_counts.total_bookings,
+    ROW_NUMBER() OVER (ORDER BY booking_counts.total_bookings DESC) AS property_rank
 FROM
     Properties p
 JOIN
-    PropertyBookingCounts pbc ON p.property_id = pbc.property_id
+    (SELECT property_id, COUNT(booking_id) AS total_bookings FROM Bookings GROUP BY property_id) AS booking_counts
+ON
+    p.property_id = booking_counts.property_id
 ORDER BY
     property_rank;
